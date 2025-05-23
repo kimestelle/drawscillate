@@ -281,8 +281,15 @@ export function Drawscillator() {
             )}
             <div className="h-full overflow-y-scroll flex flex-col items-center justify-center gap-5">
                 {clips.map((clip, i) => (
-                    <div key={i} className="drawscillator-clip" onClick={() => setSelectedClip(i)}>
+                    <div key={i} className="drawscillator-clip relative" onClick={() => setSelectedClip(i)}>
                         <img src={clip.image} alt={`Waveform ${i}`} className="wave-preview" />
+                        <a
+                            href={clip.audioUrl}
+                            download={`drawscillator_clip_${i}.wav`}
+                            className="absolute top-0 right-0 text-sm text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded"
+                        >
+                        ⬇
+                      </a>
                     </div>
                 ))}
             </div>  
