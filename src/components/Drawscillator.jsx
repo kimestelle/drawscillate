@@ -212,22 +212,23 @@ export function Drawscillator() {
         ctx.strokeStyle = 'black';
     }
 
-    function float32ToWav(float32Array, sampleRate = 44100) {
+    function float32ToWav(float32Array, sampleRate = 44100, repeatCount = 30) {
         const numChannels = 1;
         const bitsPerSample = 16;
         const bytesPerSample = bitsPerSample / 8;
-        const numSamples = float32Array.length;
-      
+        const originalLength = float32Array.length;
+        const numSamples = originalLength * repeatCount;
+    
         const buffer = new ArrayBuffer(44 + numSamples * bytesPerSample);
         const view = new DataView(buffer);
-      
+    
         let offset = 0;
         const writeString = (str) => {
-          for (let i = 0; i < str.length; i++) {
-            view.setUint8(offset++, str.charCodeAt(i));
-          }
+            for (let i = 0; i < str.length; i++) {
+                view.setUint8(offset++, str.charCodeAt(i));
+            }
         };
-      
+    
         writeString('RIFF');
         view.setUint32(offset, 36 + numSamples * bytesPerSample, true); offset += 4;
         writeString('WAVE');
@@ -241,15 +242,18 @@ export function Drawscillator() {
         view.setUint16(offset, bitsPerSample, true); offset += 2;
         writeString('data');
         view.setUint32(offset, numSamples * bytesPerSample, true); offset += 4;
-      
-        for (let i = 0; i < numSamples; i++, offset += 2) {
-          let s = Math.max(-1, Math.min(1, float32Array[i]));
-          s = s < 0 ? s * 0x8000 : s * 0x7FFF;
-          view.setInt16(offset, s, true);
+    
+        for (let r = 0; r < repeatCount; r++) {
+            for (let i = 0; i < originalLength; i++, offset += 2) {
+                let s = Math.max(-1, Math.min(1, float32Array[i]));
+                s = s < 0 ? s * 0x8000 : s * 0x7FFF;
+                view.setInt16(offset, s, true);
+            }
         }
-      
+    
         return new Blob([buffer], { type: 'audio/wav' });
     }
+    
     
     return (
         <div className="w-screen h-screen flex flex-col items-center justify-center">
