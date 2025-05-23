@@ -103,18 +103,41 @@ export function Drawscillator() {
         };
     }, []); 
     
-    // Converts points array to waveform array
     function pointsToWave(points, canvasHeight) {
-        const wave = new Float32Array(canvasRef.current.width);
-        wave.fill(0); 
-
-        points.forEach(({ x, y }) => {
-            const amp = 1 - 2 * (y / canvasHeight);
-            wave[Math.floor(x)] = amp;
-        });   
-        
+        const waveLength = 512; // power of two for nicer buffer sizes
+        const wave = new Float32Array(waveLength);
+        wave.fill(0);
+      
+        if (points.length === 0) return wave;
+      
+        // Interpolate points to evenly spaced samples over waveLength
+        // First, scale points x to waveLength domain
+        const scaledPoints = points.map(p => ({
+          x: (p.x / canvasRef.current.width) * waveLength,
+          y: p.y,
+        }));
+      
+        for (let i = 0; i < waveLength; i++) {
+          // Find two points around i
+          let p0, p1;
+          for (let j = 0; j < scaledPoints.length - 1; j++) {
+            if (scaledPoints[j].x <= i && scaledPoints[j+1].x >= i) {
+              p0 = scaledPoints[j];
+              p1 = scaledPoints[j+1];
+              break;
+            }
+          }
+          if (!p0 || !p1) {
+            wave[i] = 0; // outside drawn range
+          } else {
+            const t = (i - p0.x) / (p1.x - p0.x);
+            const y = p0.y + t * (p1.y - p0.y);
+            wave[i] = 1 - 2 * (y / canvasHeight);
+          }
+        }
+      
         return wave;
-    }
+      }
 
     // Handle submit button click
     function handleSubmit() {
@@ -227,10 +250,9 @@ export function Drawscillator() {
       
         return new Blob([buffer], { type: 'audio/wav' });
     }
-      
     
     return (
-        <div className="drawscillator-container">
+        <div className="w-screen h-screen flex flex-col items-center justify-center">
             <div className="drawscillator-subcontainer">
                 <canvas ref={canvasRef} className="relative w-[80svw] aspect-[3/1] border border-black" width={400} height={200} />
                 
@@ -242,7 +264,7 @@ export function Drawscillator() {
                         Submit
                     </button>
                     {/* <button className="drawscillator-button" onClick={handleAudio}>
-                        Play Sound
+                        Play Sound a lot
                     </button> */}
                 </div>
                 {selectedClip !== null && (

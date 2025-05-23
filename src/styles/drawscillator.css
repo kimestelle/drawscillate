@@ -15,7 +15,8 @@
     height: 100svh;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: start;
+    padding-top: 4rem;
     align-items: center;
     background-color: rgb(62, 77, 116);
     gap: 1%;
