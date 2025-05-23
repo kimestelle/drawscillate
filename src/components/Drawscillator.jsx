@@ -256,7 +256,7 @@ export function Drawscillator() {
     
     
     return (
-        <div className="w-screen h-screen flex flex-col items-center justify-start gap-5 bg-gray-200">
+        <div className="w-screen h-screen flex flex-col items-center justify-start overflow-y-scroll gap-5 bg-gray-200">
             <h1>DRAWscillator</h1>
             <canvas ref={canvasRef} className="w-[80svw] aspect-[3/1] border border-black" width={400} height={200} />
             <div className="flex flex-row gap-5">
