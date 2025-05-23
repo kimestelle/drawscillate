@@ -1,0 +1,1 @@
+This folder is for helper functions (math, audio, waveform fitters)
