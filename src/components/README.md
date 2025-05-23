@@ -1,0 +1,1 @@
+This folder is for reusable components (buttons, knobs, sliders, canvas panels)
