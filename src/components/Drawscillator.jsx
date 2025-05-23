@@ -2,6 +2,10 @@ import React, { useRef, useState, useEffect } from 'react';
 import '../styles/drawscillator.css';
 
 export function Drawscillator() {
+
+    const sampleRateGlobal = 44100;
+    const waveLength = 341;
+
     const canvasRef = useRef(null);
     const pointsRef = useRef([]);
     const drawingRef = useRef(false);
@@ -104,7 +108,6 @@ export function Drawscillator() {
     }, []); 
     
     function pointsToWave(points, canvasHeight) {
-        const waveLength = 512; // power of two for nicer buffer sizes
         const wave = new Float32Array(waveLength);
         wave.fill(0);
       
@@ -213,6 +216,7 @@ export function Drawscillator() {
     }
 
     function float32ToWav(float32Array, sampleRate = 44100, repeatCount = 30) {
+        sampleRate = sampleRateGlobal
         const numChannels = 1;
         const bitsPerSample = 16;
         const bytesPerSample = bitsPerSample / 8;
