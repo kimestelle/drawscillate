@@ -1,27 +1,4 @@
 
-.drawscillator-container {
-    width: 100svw;
-    height: 100svh;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    background-color: rgb(62, 77, 116);
-    gap: 1%;
-}
-
-.drawscillator-subcontainer {
-    width: 100svw;
-    height: 100svh;
-    display: flex;
-    flex-direction: column;
-    justify-content: start;
-    padding-top: 4rem;
-    align-items: center;
-    background-color: rgb(62, 77, 116);
-    gap: 1%;
-}
-
 .drawscillator-controls {
     background-color: #cacaca;
     display: flex;

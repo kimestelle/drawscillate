@@ -252,11 +252,10 @@ export function Drawscillator() {
     }
     
     return (
-        <div className="w-screen h-screen flex flex-col items-center justify-center">
-            <div className="drawscillator-subcontainer">
-                <canvas ref={canvasRef} className="relative w-[80svw] aspect-[3/1] border border-black" width={400} height={200} />
-                
-                <div className="drawscillator-controls">
+        <div className="w-screen h-screen flex flex-col items-center justify-start gap-5 bg-gray-200">
+            <h1>DRAWscillator</h1>
+            <canvas ref={canvasRef} className="w-[80svw] aspect-[3/1] border border-black" width={400} height={200} />
+            <div className="flex flex-row gap-5">
                     <button className="drawscillator-button" onClick={handleClear}>
                         Clear
                     </button>
@@ -267,6 +266,8 @@ export function Drawscillator() {
                         Play Sound a lot
                     </button> */}
                 </div>
+
+            <div className="w-full  flex flex-row items-center justify-center gap-5">
                 {selectedClip !== null && (
                 <div className="drawscillator-selected-clip">
                     <h3>Selected Clip</h3>
@@ -274,15 +275,14 @@ export function Drawscillator() {
                     <audio controls src={clips[selectedClip].audioUrl} autoPlay loop></audio>
                 </div>
             )}
-            </div>
-
-            <div className="audio-clips-container">
+            <div className="h-full overflow-y-scroll flex flex-col items-center justify-center gap-5">
                 {clips.map((clip, i) => (
                     <div key={i} className="drawscillator-clip" onClick={() => setSelectedClip(i)}>
                         <img src={clip.image} alt={`Waveform ${i}`} className="wave-preview" />
                     </div>
                 ))}
             </div>  
+            </div>
       </div>
     );
 }
