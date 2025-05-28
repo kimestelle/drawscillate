@@ -263,15 +263,16 @@ export function Drawscillator() {
     }
      
     return (
-        <div className="w-full h-full flex flex-col items-center justify-start p-5 bg-gray-200">
-            <div className='felt-bg w-full overflow-y-scroll h-full flex flex-col items-center justify-start rounded-xl shadow-lg p-2 md:px-24 lg:px-48 gap-[2svw] bg-gray-800'>
+        <div className="w-full h-full flex flex-col items-center p-5 bg-white">
+            <div className='relative felt-bg w-full h-full overflow-hidden max-w-[60rem] flex flex-col items-center justify-between rounded-xl shadow-lg gap-2 p-2 md:p-10 md:px-24'>
                 <h1 className='text-[5svw]'>DRAWscillator</h1>
-                <div className='w-full md:w-[70%] h-min md:h-[15svw] flex flex-col md:flex-row items-center justify-center gap-5'>
-                    <canvas ref={canvasRef} className="h-full max-w-full aspect-[3/1] border border-black" width={400} height={200} />
-                    <div className='w-full md:w-[20%] h-full flex flex-col items-center justify-center gap-2'>
-                    <div className="w-full h-[9svh] md:h-full overflow-x-scroll md:overflow-y-scroll flex flex-row md:flex-col items-center justify-center gap-5 bg-neutral-800 shadow-inner rounded-sm p-2">
+                <div className='w-full h-min flex flex-col sm:flex-row items-center justify-center gap-5'>
+                    <canvas ref={canvasRef} className="w-full aspect-[3/1] border border-black" width={400} height={200} />
+
+                    <div className='w-full h-full flex flex-col items-center justify-center gap-2'>
+                    <div className="w-full h-[9svh] overflow-x-scroll flex flex-row items-center justify-center gap-5 bg-neutral-800 shadow-inner rounded-sm p-2">
                     {clips.map((clip, i) => (
-                        <div key={i} className="relative h-full md:w-full md:h-auto shrink-0" onClick={() => setSelectedClip(i)}>
+                        <div key={i} className="relative h-full shrink-0" onClick={() => setSelectedClip(i)}>
                             <img src={clip.image} alt={`Waveform ${i}`} className="w-full h-full border border-blacks" />
                             <a
                                 href={clip.audioUrl}
@@ -299,8 +300,8 @@ export function Drawscillator() {
                 </div>
                 </div>
             </div>
-            <div id="submitted-clip-and-keyboard" className='w-full h-[15svw] flex flex-row items-center justify-center gap-[2svw]'>
-                <div className='w-[30svw] bg-green-200 rounded-md p-[0.5svw] pb-[0.2svw] h-full flex flex-col'>
+            <div id="submitted-clip-and-keyboard" className='w-full h-full flex flex-row items-center justify-center gap-[2svw]'>
+                <div className='w-[30svw] bg-neutral-200 rounded-md p-[0.5svw] pb-[0.2svw] h-full flex flex-col'>
                 {selectedClip !== null && (
                     <div className="relative w-full h-full flex flex-col items-center justify-center">
                         <img src={clips[selectedClip].image} alt={`Selected Waveform ${selectedClip}`} className="w-full border border-black" />

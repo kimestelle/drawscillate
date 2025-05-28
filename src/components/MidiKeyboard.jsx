@@ -143,37 +143,66 @@ export function MidiKeyboard({ clip }) {
   const whiteNotes = [];
   const blackNotes = [];
 
+  let whiteIndex = 0;
   for (let i = BASE_MIDI; i < BASE_MIDI + TOTAL_KEYS; i++) {
     const note = getNoteName(i);
-    const freq = midiToFreq(i);
     const isSharp = note.includes('#');
-    const offset = i - BASE_MIDI;
+    const freq = midiToFreq(i);
+  
+    if (!isSharp) {
+      const key = (
+        <button
+          key={i}
+          onMouseDown={() => handleMouseDown(freq)}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          className="absolute bg-white hover:bg-neutral-200 w-8 h-32 border border-black"
+          style={{ left: `${whiteIndex * 32}px` }}
+          title={note}
+        />
+      );
+      whiteNotes.push(key);
+      whiteIndex++;
+    }
+  }
 
+  whiteIndex = 0;
+  for (let i = BASE_MIDI; i < BASE_MIDI + TOTAL_KEYS; i++) {
+    const note = getNoteName(i);
+    const isSharp = note.includes('#');
+    const freq = midiToFreq(i);
+  
+    if (!isSharp) {
+      whiteIndex++;
+      continue;
+    }
+  
+    const prevNote = getNoteName(i - 1);
+    if (['E', 'B'].includes(prevNote)) continue; // no black keys after E/B
+  
     const key = (
       <button
         key={i}
         onMouseDown={() => handleMouseDown(freq)}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        className={`absolute ${isSharp ? 'bg-black z-10 w-4 h-24' : 'bg-white w-8 h-32'} border border-black`}
-        style={{ left: `${isSharp ? (offset - 0.5) * 16 : offset * 16}px` }}
+        className="absolute bg-black hover:bg-neutral-800 w-6 h-20 z-10 border border-black"
+        style={{ left: `${(whiteIndex - 1) * 32 + 4}px` }} 
         title={note}
       />
     );
-
-    if (isSharp) blackNotes.push(key);
-    else whiteNotes.push(key);
+    blackNotes.push(key);
   }
+  
 
   return (
-    <div className="relative flex flex-row w-full h-32 overflow-x-scroll overflow-y-hidden">
+    <div className="relative flex flex-row w-full h-32 shrink-0 overflow-x-scroll">
       <canvas
         ref={canvasRef}
         className="absolute w-full h-[50%] top-0 left-0 z-20 pointer-events-none"
-        width={TOTAL_KEYS * 16}
       />
       <div className="relative w-5 h-full z-0">{whiteNotes}</div>
-      <div className="absolute top-0 w-5 left-0 z-10">{blackNotes}</div>
+      <div className="absolute top-0 w-5 left-4 z-10">{blackNotes}</div>
     </div>
   );
 }
