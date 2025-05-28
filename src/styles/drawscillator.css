@@ -8,15 +8,6 @@
     gap: 1em;
 }
 
-.wave-preview {
-    border: 1px solid black;
-}
-
-.drawscillator-clip {
-    height: 100px;
-    width: 200px;
-}
-
 .audio-clips-container {
     height: 50svh;
 

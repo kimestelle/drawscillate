@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
+import { MidiKeyboard } from './MidiKeyboard';
 import '../styles/drawscillator.css';
 
 export function Drawscillator() {
@@ -21,7 +22,7 @@ export function Drawscillator() {
         
         ctx.fillStyle = 'none';
 
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 3;
         ctx.strokeStyle = 'lightgray';
         ctx.lineCap = 'round';    
 
@@ -174,7 +175,10 @@ export function Drawscillator() {
         const audioUrl = URL.createObjectURL(audioBlob);
 
         // Add to clips list
-        setClips((prev) => [...prev, { image: image, wave: wave, audioUrl: audioUrl }]); 
+        setClips((prev) => {
+            const updated = [...prev, { image, wave, audioUrl }];
+            return updated;
+        });
         
         // Clear drawing data and canvas for next draw
         pointsRef.current = [];
@@ -257,47 +261,59 @@ export function Drawscillator() {
     
         return new Blob([buffer], { type: 'audio/wav' });
     }
-    
-    
+     
     return (
-        <div className="w-screen h-screen flex flex-col items-center justify-start overflow-y-scroll gap-5 bg-gray-200">
-            <h1>DRAWscillator</h1>
-            <canvas ref={canvasRef} className="w-[80svw] aspect-[3/1] border border-black" width={400} height={200} />
-            <div className="flex flex-row gap-5">
-                    <button className="drawscillator-button" onClick={handleClear}>
-                        Clear
-                    </button>
-                    <button className="drawscillator-button" onClick={handleSubmit}>
-                        Submit
-                    </button>
-                    {/* <button className="drawscillator-button" onClick={handleAudio}>
-                        Play Sound a lot
-                    </button> */}
+        <div className="w-full h-full flex flex-col items-center justify-start p-5 bg-gray-200">
+            <div className='felt-bg w-full overflow-y-scroll h-full flex flex-col items-center justify-start rounded-xl shadow-lg p-2 md:px-24 lg:px-48 gap-[2svw] bg-gray-800'>
+                <h1 className='text-[5svw]'>DRAWscillator</h1>
+                <div className='w-full md:w-[70%] h-min md:h-[15svw] flex flex-col md:flex-row items-center justify-center gap-5'>
+                    <canvas ref={canvasRef} className="h-full max-w-full aspect-[3/1] border border-black" width={400} height={200} />
+                    <div className='w-full md:w-[20%] h-full flex flex-col items-center justify-center gap-2'>
+                    <div className="w-full h-[9svh] md:h-full overflow-x-scroll md:overflow-y-scroll flex flex-row md:flex-col items-center justify-center gap-5 bg-neutral-800 shadow-inner rounded-sm p-2">
+                    {clips.map((clip, i) => (
+                        <div key={i} className="relative h-full md:w-full md:h-auto shrink-0" onClick={() => setSelectedClip(i)}>
+                            <img src={clip.image} alt={`Waveform ${i}`} className="w-full h-full border border-blacks" />
+                            <a
+                                href={clip.audioUrl}
+                                download={`drawscillator_clip_${i}.wav`}
+                                className="absolute top-0 right-0 text-white text-[1.5svw] bg-blue-600 hover:bg-blue-700 p-[0.5svw] rounded"
+                            >
+                            ⬇
+                        </a>
+                        {selectedClip === i && (
+                            <>
+                            <img src={clip.image} alt={`Selected Waveform ${i}`} className="absolute top-0 left-0 w-full h-full border-2 border-yellow-500" />
+                            <audio controls src={clips[selectedClip].audioUrl} hidden autoPlay></audio>
+                            </>
+                        )}
+                        </div>
+                    ))}
+                </div> 
+                <div className="w-full h-min flex flex-row gap-[1svw]">
+                        <button className="rounded-md bg-black p-[0.2svw] px-2" onClick={handleClear}>
+                            Clear
+                        </button>
+                        <button className="rounded-md bg-black p-[0.2svw] px-2"onClick={handleSubmit}>
+                            Submit
+                        </button>
                 </div>
-
-            <div className="w-full  flex flex-row items-center justify-center gap-5">
-                {selectedClip !== null && (
-                <div className="drawscillator-selected-clip">
-                    <h3>Selected Clip</h3>
-                    <img src={clips[selectedClip].image} alt={`Waveform ${selectedClip}`} className="wave-preview" />
-                    <audio controls src={clips[selectedClip].audioUrl} autoPlay loop></audio>
                 </div>
-            )}
-            <div className="h-full overflow-y-scroll flex flex-col items-center justify-center gap-5">
-                {clips.map((clip, i) => (
-                    <div key={i} className="drawscillator-clip relative" onClick={() => setSelectedClip(i)}>
-                        <img src={clip.image} alt={`Waveform ${i}`} className="wave-preview" />
-                        <a
-                            href={clip.audioUrl}
-                            download={`drawscillator_clip_${i}.wav`}
-                            className="absolute top-0 right-0 text-sm text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded"
-                        >
-                        ⬇
-                      </a>
-                    </div>
-                ))}
-            </div>  
             </div>
+            <div id="submitted-clip-and-keyboard" className='w-full h-[15svw] flex flex-row items-center justify-center gap-[2svw]'>
+                <div className='w-[30svw] bg-green-200 rounded-md p-[0.5svw] pb-[0.2svw] h-full flex flex-col'>
+                {selectedClip !== null && (
+                    <div className="relative w-full h-full flex flex-col items-center justify-center">
+                        <img src={clips[selectedClip].image} alt={`Selected Waveform ${selectedClip}`} className="w-full border border-black" />
+                        <audio className='w-full' controls src={clips[selectedClip].audioUrl} loop></audio>
+                    </div>
+                )}
+                </div>
+                <div className='w-full h-full flex flex-col items-center justify-center'>
+                    <p className='text-[2svw]'>controls here like frequency or volume</p>
+                </div>
+            </div>
+            <MidiKeyboard clip={clips[selectedClip]} />
+        </div>
       </div>
     );
 }

@@ -1,14 +1,14 @@
 @import "tailwindcss";
 
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
 
-  width: 100svw;
-  height: 100svh;
+:root {
   display: flex;
-  place-items: center;
 
   color: rgba(255, 255, 255, 0.87);
   background-color: white;
@@ -19,57 +19,43 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
 body {
-  margin: 0;
   display: flex;
   place-items: center;
-  width: 100svw;
-  height: 100svh;
   overflow: hidden;
 }
 
+::-webkit-scrollbar {
+  width: 6px; 
+  height: 6px; 
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: 3px;
+}
+
+
 h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+  font-family: "Knewave", system-ui;
+  font-size: 4rem;
+  font-weight: 400;
+  color: #fff;
+  text-shadow: 2px 2px 0 #222;
+  font-style: normal;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+.felt-bg {
+  background-image:
+  url('/textures/binding-light.png'),
+  linear-gradient(to top, #000000, #282828);
+  background-size: 100px 100px, 100% 100%;
+  background-repeat: repeat;
+  background-position: center;
+  background-attachment: fixed;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
-}
