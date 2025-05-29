@@ -265,12 +265,15 @@ export function Drawscillator() {
     return (
         <div className="w-full h-full flex flex-col items-center p-5 bg-white">
             <div className='relative felt-bg w-full h-full overflow-hidden max-w-[60rem] flex flex-col items-center justify-between rounded-xl shadow-lg gap-2 p-2 md:p-10 md:px-24'>
-                <h1 className='text-[5svw]'>DRAWscillator</h1>
+                <div className='w-full flex flex-row items-start md:mb-10'>
+                <h1 className='text-[2rem] md:text-[3rem]'>DRAWscillator</h1>
+                <div className='w-full h-[85%] border-b border-white'></div>
+                </div>
                 <div className='w-full h-min flex flex-col sm:flex-row items-center justify-center gap-5'>
                     <canvas ref={canvasRef} className="w-full aspect-[3/1] border border-black" width={400} height={200} />
 
                     <div className='w-full h-full flex flex-col items-center justify-center gap-2'>
-                    <div className="w-full h-[9svh] overflow-x-scroll flex flex-row items-center justify-center gap-5 bg-neutral-800 shadow-inner rounded-sm p-2">
+                    <div className="w-full h-[9svh] overflow-x-scroll flex flex-row items-center justify-center gap-5 bg-neutral-200 shadow-inner rounded-sm p-2">
                     {clips.map((clip, i) => (
                         <div key={i} className="relative h-full shrink-0" onClick={() => setSelectedClip(i)}>
                             <img src={clip.image} alt={`Waveform ${i}`} className="w-full h-full border border-blacks" />

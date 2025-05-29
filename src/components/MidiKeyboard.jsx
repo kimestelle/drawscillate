@@ -156,7 +156,7 @@ export function MidiKeyboard({ clip }) {
           onMouseDown={() => handleMouseDown(freq)}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
-          className="absolute bg-white hover:bg-neutral-200 w-8 h-32 border border-black"
+          className="absolute bg-white hover:bg-neutral-200 w-[31px] h-32 shadow-inner"
           style={{ left: `${whiteIndex * 32}px` }}
           title={note}
         />
@@ -186,8 +186,8 @@ export function MidiKeyboard({ clip }) {
         onMouseDown={() => handleMouseDown(freq)}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        className="absolute bg-black hover:bg-neutral-800 w-6 h-20 z-10 border border-black"
-        style={{ left: `${(whiteIndex - 1) * 32 + 4}px` }} 
+        className="absolute bg-black hover:bg-neutral-800 w-6 h-20 top-[9px] z-10 border border-black"
+        style={{ left: `${(whiteIndex - 1) * 32 + 15.5}px` }} 
         title={note}
       />
     );
@@ -196,13 +196,13 @@ export function MidiKeyboard({ clip }) {
   
 
   return (
-    <div className="relative flex flex-row w-full h-32 shrink-0 overflow-x-scroll">
-      <canvas
+    <div className="relative flex flex-row w-full bg-neutral-200 shadow-inner rounded-md h-38 p-3 shrink-0 overflow-x-scroll">
+      {/* <canvas
         ref={canvasRef}
         className="absolute w-full h-[50%] top-0 left-0 z-20 pointer-events-none"
-      />
-      <div className="relative w-5 h-full z-0">{whiteNotes}</div>
-      <div className="absolute top-0 w-5 left-4 z-10">{blackNotes}</div>
+      /> */}
+      <div className="relative w-full h-full z-0">{whiteNotes}</div>
+      <div className="absolute top-0 w-full left-4 z-10">{blackNotes}</div>
     </div>
   );
 }

@@ -5,13 +5,13 @@
             <defs>
                 <linearGradient id="pastelGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#f2371f">
-                    <animate attributeName="stop-color" values="#f2371f;#d6f5ff;#FFC700;#f2371f" dur="12s" repeatCount="indefinite" />
+                    <animate attributeName="stop-color" values="#f2371f;#d6f5ff;#FFC700;#f2371f" dur="20s" repeatCount="indefinite" />
                 </stop>
                 <stop offset="50%" stopColor="#d6f5ff">
-                    <animate attributeName="stop-color" values="#d6f5ff;#FFC700;#f2371f;#d6f5ff" dur="12s" repeatCount="indefinite" />
+                    <animate attributeName="stop-color" values="#d6f5ff;#FFC700;#f2371f;#d6f5ff" dur="20s" repeatCount="indefinite" />
                 </stop>
                 <stop offset="100%" stopColor="#FFC700">
-                    <animate attributeName="stop-color" values="#FFC700;#f2371f;#d6f5ff;#FFC700" dur="12s" repeatCount="indefinite" />
+                    <animate attributeName="stop-color" values="#FFC700;#f2371f;#d6f5ff;#FFC700" dur="20s" repeatCount="indefinite" />
                 </stop>
                 </linearGradient>
             </defs>
