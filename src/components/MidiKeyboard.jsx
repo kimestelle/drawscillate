@@ -1,9 +1,10 @@
 import { useRef, useEffect } from 'react';
 
-export function MidiKeyboard({ clip }) {
+export function MidiKeyboard({ clip, volume = 1 }) {
   const audioContextRef = useRef(null);
   const stopRef = useRef(false);
   const currentOscillatorRef = useRef(null);
+
   // const canvasRef = useRef(null);
   // const animationRef = useRef(null);
 
@@ -89,7 +90,7 @@ export function MidiKeyboard({ clip }) {
     oscillator.frequency.setValueAtTime(freq, context.currentTime);
 
     oscillator.connect(gainNode).connect(context.destination);
-    gainNode.gain.setValueAtTime(1, context.currentTime);
+    gainNode.gain.setValueAtTime(volume, context.currentTime); 
 
     oscillator.start();
     currentOscillatorRef.current = oscillator;

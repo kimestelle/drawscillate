@@ -24,6 +24,7 @@ export function Drawscillator() {
     const [clips, setClips] = useState([]);
     const [loaded, setLoaded] = useState(false);
     const [selectedClip, setSelectedClip] = useState(null);
+    const [volume, setVolume] = useState(0.5);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -430,10 +431,11 @@ export function Drawscillator() {
                 )}
                 </div>
                 <div className='md:w-full h-full flex flex-col items-center justify-center'>
-                    <p className='text-[2svw]'>controls here like frequency or volume</p>
+                    <label>volume</label>
+                    <input type='range' min='0' max='1' step='0.05' value={volume} onChange={(e) => setVolume(e.target.value)} className='w-full h-[2svh] bg-neutral-200 rounded-md' />
                 </div>
             </div>
-            <MidiKeyboard clip={clips[selectedClip]} />
+            <MidiKeyboard clip={clips[selectedClip]} volume={volume} />
         </div>
       </div>
     );
