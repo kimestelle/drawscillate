@@ -1,17 +1,38 @@
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 
 export function MidiKeyboard({ clip }) {
   const audioContextRef = useRef(null);
   const stopRef = useRef(false);
   const currentOscillatorRef = useRef(null);
-  const canvasRef = useRef(null);
-  const animationRef = useRef(null);
+  // const canvasRef = useRef(null);
+  // const animationRef = useRef(null);
 
   const wave = clip?.wave;
   const BASE_MIDI = 33;
   const TOTAL_KEYS = 75;
   const A1_MIDI = 33;
   const A1_FREQ = 55;
+
+  useEffect(() => {
+    const keys = document.querySelectorAll('.white-key, .black-key');
+    keys.forEach((key) => {
+      key.addEventListener(
+        'touchstart',
+        (e) => e.preventDefault(),
+        { passive: false }
+      );
+    });
+  
+    return () => {
+      keys.forEach((key) => {
+        key.removeEventListener(
+          'touchstart',
+          (e) => e.preventDefault(),
+          { passive: false }
+        );
+      });
+    };
+  }, []);
 
   function midiToFreq(midi) {
     return A1_FREQ * Math.pow(2, (midi - A1_MIDI) / 12);
@@ -73,7 +94,7 @@ export function MidiKeyboard({ clip }) {
     oscillator.start();
     currentOscillatorRef.current = oscillator;
 
-    drawWaveform(wave, freq, 2);
+    // drawWaveform(wave, freq, 2);
   }
 
   function stopOscillator() {
@@ -82,10 +103,10 @@ export function MidiKeyboard({ clip }) {
       currentOscillatorRef.current.disconnect();
       currentOscillatorRef.current = null;
     }
-    cancelAnimationFrame(animationRef.current);
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // cancelAnimationFrame(animationRef.current);
+    // const canvas = canvasRef.current;
+    // const ctx = canvas.getContext('2d');
+    // ctx.clearRect(0, 0, canvas.width, canvas.height);
   }
 
   function handleMouseDown(freq) {
@@ -98,46 +119,47 @@ export function MidiKeyboard({ clip }) {
     stopOscillator();
   }
 
-  function drawWaveform(rawWave, frequency = 440, visualSpeedFactor = 1) {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    const width = canvas.width;
-    const height = canvas.height;
+  // function drawWaveform(rawWave, frequency = 440, visualSpeedFactor = 1) {
+  //   const canvas = canvasRef.current;
+  //   const ctx = canvas.getContext('2d');
+  //   if (!canvas || !ctx) return;
+  //   const width = canvas.width;
+  //   const height = canvas.height;
   
-    // normalize waveform 
-    const min = Math.min(...rawWave);
-    const max = Math.max(...rawWave);
-    const mean = (min + max) / 2;
-    const amplitude = Math.max(Math.abs(min - mean), Math.abs(max - mean)) || 1;
-    const wave = rawWave.map(v => (v - mean) / amplitude);
+  //   // normalize waveform 
+  //   const min = Math.min(...rawWave);
+  //   const max = Math.max(...rawWave);
+  //   const mean = (min + max) / 2;
+  //   const amplitude = Math.max(Math.abs(min - mean), Math.abs(max - mean)) || 1;
+  //   const wave = rawWave.map(v => (v - mean) / amplitude);
   
-    const waveLength = wave.length;
-    const samplesPerSecond = audioContextRef.current.sampleRate;
-    const samplesPerCycle = samplesPerSecond / frequency;
+  //   const waveLength = wave.length;
+  //   const samplesPerSecond = audioContextRef.current.sampleRate;
+  //   const samplesPerCycle = samplesPerSecond / frequency;
   
-    let t = 0;
-    const pixelsPerSecond = width / (samplesPerCycle / samplesPerSecond);
-    const pixelsPerFrame = (pixelsPerSecond / 60) / visualSpeedFactor;
+  //   let t = 0;
+  //   const pixelsPerSecond = width / (samplesPerCycle / samplesPerSecond);
+  //   const pixelsPerFrame = (pixelsPerSecond / 60) / visualSpeedFactor;
   
-    function draw() {
-      ctx.clearRect(0, 0, width, height);
-      ctx.beginPath();
-      ctx.strokeStyle = '#38bdf8';
+  //   function draw() {
+  //     ctx.clearRect(0, 0, width, height);
+  //     ctx.beginPath();
+  //     ctx.strokeStyle = '#38bdf8';
   
-      for (let i = 0; i < width; i++) {
-        const sampleIndex = Math.floor((i + t) % waveLength);
-        const val = wave[sampleIndex] || 0;
-        const y = height / 2 - val * (height / 2);
-        ctx.lineTo(i, y);
-      }
+  //     for (let i = 0; i < width; i++) {
+  //       const sampleIndex = Math.floor((i + t) % waveLength);
+  //       const val = wave[sampleIndex] || 0;
+  //       const y = height / 2 - val * (height / 2);
+  //       ctx.lineTo(i, y);
+  //     }
   
-      ctx.stroke();
-      t = (t + pixelsPerFrame) % waveLength;
-      animationRef.current = requestAnimationFrame(draw);
-    }
+  //     ctx.stroke();
+  //     t = (t + pixelsPerFrame) % waveLength;
+  //     animationRef.current = requestAnimationFrame(draw);
+  //   }
   
-    draw();
-  }
+  //   draw();
+  // }
   
 
   const whiteNotes = [];
@@ -156,7 +178,12 @@ export function MidiKeyboard({ clip }) {
           onMouseDown={() => handleMouseDown(freq)}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
-          className="absolute bg-white hover:bg-neutral-200 w-[31px] h-32 shadow-inner"
+          onTouchStart={() => handleMouseDown(freq)}
+          onTouchEnd={handleMouseUp}
+          onTouchCancel={handleMouseUp}
+
+
+          className="white-key absolute select-none bg-white hover:bg-neutral-200 w-[31px] h-32 shadow-inner"
           style={{ left: `${whiteIndex * 32}px` }}
           title={note}
         />
@@ -186,7 +213,7 @@ export function MidiKeyboard({ clip }) {
         onMouseDown={() => handleMouseDown(freq)}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        className="absolute bg-black hover:bg-neutral-800 w-6 h-20 top-[9px] z-10 border border-black"
+        className="black-key absolute select-none bg-black hover:bg-neutral-800 w-6 h-20 top-[9px] z-10 border border-black"
         style={{ left: `${(whiteIndex - 1) * 32 + 15.5}px` }} 
         title={note}
       />

@@ -5,7 +5,15 @@ import '../styles/drawscillator.css';
 export function Drawscillator() {
 
     const sampleRateGlobal = 44100;
-    const waveLength = 341;
+    const samplesPerCycle = 341;
+    //TODO: slider to change this
+    const repeatCount = 50;
+
+    const frequencyHz = sampleRateGlobal / samplesPerCycle;
+    const wavelengthSeconds = 1 / frequencyHz;
+
+    console.log("Wavelength (s): ", wavelengthSeconds);
+    console.log("Frequency (Hz): ", frequencyHz);
 
     const canvasRef = useRef(null);
     const pointsRef = useRef([]);
@@ -14,6 +22,7 @@ export function Drawscillator() {
     const lastYRef = useRef(0);
 
     const [clips, setClips] = useState([]);
+    const [loaded, setLoaded] = useState(false);
     const [selectedClip, setSelectedClip] = useState(null);
 
     useEffect(() => {
@@ -42,6 +51,17 @@ export function Drawscillator() {
                 y: (e.clientY - rect.top) * scaleY,
             };
         } 
+
+        function getTouchPos(e, canvas) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const touch = e.touches[0] || e.changedTouches[0];
+            return {
+                x: (touch.clientX - rect.left) * scaleX,
+                y: (touch.clientY - rect.top) * scaleY,
+            };
+        }
 
         function onMouseDown(e) {
             const pos = getMousePos(e, canvas);
@@ -94,34 +114,131 @@ export function Drawscillator() {
         function onMouseUp() {
             drawingRef.current = false;
         } 
+
+        function onTouchStart(e) {
+            console.log('touchstart');
+            e.preventDefault();
+            console.log('touchstart event', e);
+            const pos = getTouchPos(e, canvas);
+            console.log('touchstart pos', pos);
+            if (pos.x > 0) {
+                if ((pointsRef.current.length === 0)) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, canvas.height / 2);
+                    ctx.lineTo(pos.x, pos.y);
+                    ctx.stroke();
+                } else if (pos.x > lastXRef.current) {
+                    ctx.beginPath();
+                    ctx.moveTo(lastXRef.current, lastYRef.current);
+                    ctx.lineTo(pos.x, pos.y);
+                    ctx.stroke();
+                }
+            }
+
+            if (pos.x == canvas.width) {
+                handleSubmit();
+                return;
+            }
+            
+            drawingRef.current = true;
+            
+            if (pos.x <= lastXRef.current) {
+                return;
+            }
+            
+            lastXRef.current = pos.x;
+            lastYRef.current = pos.y;
+            
+            pointsRef.current = [{ x: pos.x, y: pos.y }];
+        }
+
+        function onTouchMove(e) {
+            console.log('touchmove');
+            e.preventDefault();
+            if (!drawingRef.current) return;    
+            const pos = getTouchPos(e, canvas); 
+            if (pos.x >= lastXRef.current) {
+                ctx.beginPath();
+                ctx.moveTo(lastXRef.current, lastYRef.current);
+                ctx.lineTo(pos.x, pos.y);
+                ctx.stroke(); 
+                lastXRef.current = pos.x;
+                lastYRef.current = pos.y;
+                pointsRef.current.push({ x: pos.x, y: pos.y });
+            }
+        }
+
+        function onTouchEnd(e) {
+            console.log('touchend');
+            e.preventDefault();
+            drawingRef.current = false;
+        }
         
         canvas.addEventListener('mousedown', onMouseDown);
         canvas.addEventListener('mousemove', onMouseMove);
         canvas.addEventListener('mouseup', onMouseUp);
         canvas.addEventListener('mouseout', onMouseUp); 
+        canvas.addEventListener('touchstart', onTouchStart, false);
+        canvas.addEventListener('touchmove', onTouchMove, false);
+        canvas.addEventListener('touchend', onTouchEnd, false);
           
         return () => {
             canvas.removeEventListener('mousedown', onMouseDown);
             canvas.removeEventListener('mousemove', onMouseMove);
             canvas.removeEventListener('mouseup', onMouseUp);
             canvas.removeEventListener('mouseout', onMouseUp);
+            canvas.removeEventListener('touchstart', onTouchStart);
+            canvas.removeEventListener('touchmove', onTouchMove);
+            canvas.removeEventListener('touchend', onTouchEnd);
         };
     }, []); 
-    
-    function pointsToWave(points, canvasHeight) {
-        const wave = new Float32Array(waveLength);
+
+    //reload saved clips from localstorage
+    useEffect(() => {
+        const stored = localStorage.getItem("drawscillator_clips");
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            const rehydrated = parsed.map(clip => {
+              const wave = Float32Array.from(clip.wave);
+              console.log("rehydrated wave:", wave);
+              const audioBlob = float32ToWav(wave);
+              const audioUrl = URL.createObjectURL(audioBlob);
+              return { ...clip, wave, audioUrl };
+            });
+            setClips(rehydrated);
+            console.log("loaded from localStorage:", rehydrated);
+          } catch (e) {
+            console.error("Error parsing stored clips:", e);
+          }
+        }
+        setLoaded(true);
+      }, []);
+      
+      useEffect(() => {
+        if (!loaded) return;
+        const toSave = clips.map(({ image, wave }) => ({
+          image,
+          wave: Array.from(wave), 
+        }));
+        localStorage.setItem("drawscillator_clips", JSON.stringify(toSave));
+        console.log("saved to localStorage:", toSave);
+      }, [clips, loaded]);
+      
+    function pointsToWave(points, canvasHeight, samplesPerCycle) {
+        const wave = new Float32Array(samplesPerCycle);
         wave.fill(0);
       
         if (points.length === 0) return wave;
       
-        // Interpolate points to evenly spaced samples over waveLength
-        // First, scale points x to waveLength domain
+        // Interpolate points to evenly spaced samples over samplesPerCycle
+        // First, scale points x to samplesPerCycle domain
         const scaledPoints = points.map(p => ({
-          x: (p.x / canvasRef.current.width) * waveLength,
+          x: (p.x / canvasRef.current.width) * samplesPerCycle,
           y: p.y,
         }));
       
-        for (let i = 0; i < waveLength; i++) {
+        for (let i = 0; i < samplesPerCycle; i++) {
           // Find two points around i
           let p0, p1;
           for (let j = 0; j < scaledPoints.length - 1; j++) {
@@ -169,7 +286,7 @@ export function Drawscillator() {
         } 
         
         // Generate wave and image
-        const wave = pointsToWave(pointsRef.current, canvas.height);
+        const wave = pointsToWave(pointsRef.current, canvas.height, samplesPerCycle);
         const image = canvas.toDataURL();
         const audioBlob = float32ToWav(wave);        // 🔊 WAV blob
         const audioUrl = URL.createObjectURL(audioBlob);
@@ -193,8 +310,6 @@ export function Drawscillator() {
         ctx.lineTo(canvas.width, canvas.height / 2);
         ctx.stroke(); 
         ctx.strokeStyle = 'black';
-        
-        localStorage.setItem("image", image);
     }   
 
     // Clear canvas and reset drawing state
@@ -219,13 +334,15 @@ export function Drawscillator() {
         ctx.strokeStyle = 'black';
     }
 
-    function float32ToWav(float32Array, sampleRate = 44100, repeatCount = 30) {
+    function float32ToWav(float32Array, sampleRate = 44100, repeatCountInput) {
+
+        repeatCountInput = repeatCount;
         sampleRate = sampleRateGlobal
         const numChannels = 1;
         const bitsPerSample = 16;
         const bytesPerSample = bitsPerSample / 8;
         const originalLength = float32Array.length;
-        const numSamples = originalLength * repeatCount;
+        const numSamples = originalLength * repeatCountInput;
     
         const buffer = new ArrayBuffer(44 + numSamples * bytesPerSample);
         const view = new DataView(buffer);
@@ -251,7 +368,7 @@ export function Drawscillator() {
         writeString('data');
         view.setUint32(offset, numSamples * bytesPerSample, true); offset += 4;
     
-        for (let r = 0; r < repeatCount; r++) {
+        for (let r = 0; r < repeatCountInput; r++) {
             for (let i = 0; i < originalLength; i++, offset += 2) {
                 let s = Math.max(-1, Math.min(1, float32Array[i]));
                 s = s < 0 ? s * 0x8000 : s * 0x7FFF;
@@ -270,7 +387,7 @@ export function Drawscillator() {
                 <div className='w-full h-[85%] border-b border-white'></div>
                 </div>
                 <div className='w-full h-min flex flex-col sm:flex-row items-center justify-center gap-5'>
-                    <canvas ref={canvasRef} className="w-full aspect-[3/1] border border-black" width={400} height={200} />
+                    <canvas ref={canvasRef} className="w-full aspect-[2/1] border border-black" width={400} height={200} />
 
                     <div className='w-full h-full flex flex-col items-center justify-center gap-2'>
                     <div className="w-full h-[9svh] overflow-x-scroll flex flex-row items-center justify-center gap-5 bg-neutral-200 shadow-inner rounded-sm p-2">
@@ -312,7 +429,7 @@ export function Drawscillator() {
                     </div>
                 )}
                 </div>
-                <div className='w-full h-full flex flex-col items-center justify-center'>
+                <div className='md:w-full h-full flex flex-col items-center justify-center'>
                     <p className='text-[2svw]'>controls here like frequency or volume</p>
                 </div>
             </div>
