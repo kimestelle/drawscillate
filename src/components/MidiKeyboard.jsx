@@ -1,5 +1,13 @@
 import { useRef } from 'react';
 
+function getWaveformRMS(wave) {
+  const mean = wave.reduce((a, b) => a + b, 0) / wave.length;
+  const centered = wave.map(x => x - mean);
+  const squared = centered.map(x => x * x);
+  const rms = Math.sqrt(squared.reduce((a, b) => a + b, 0) / wave.length);
+  return rms || 1; // prevent divide-by-zero
+}
+
 export function MidiKeyboard({ clip }) {
   const audioContextRef = useRef(null);
   const stopRef = useRef(false);
@@ -61,6 +69,9 @@ export function MidiKeyboard({ clip }) {
     const oscillator = context.createOscillator();
     const gainNode = context.createGain();
 
+    const clampedGain = Math.min(1, Math.max(0.1, 1 / rms));
+    gainNode.gain.setValueAtTime(clampedGain, context.currentTime);
+
     const periodicWave = createPeriodicWave(context, wave);
     if (!periodicWave) return;
 
@@ -68,13 +79,53 @@ export function MidiKeyboard({ clip }) {
     oscillator.frequency.setValueAtTime(freq, context.currentTime);
 
     oscillator.connect(gainNode).connect(context.destination);
-    gainNode.gain.setValueAtTime(1, context.currentTime);
+    const rms = getWaveformRMS(wave);
+    const targetGain = 1 / rms; // normalize to consistent loudness
+    gainNode.gain.setValueAtTime(targetGain, context.currentTime);
 
     oscillator.start();
     currentOscillatorRef.current = oscillator;
 
     drawWaveform(wave, freq, 2);
   }
+
+  function startOscillator_bufferSame(freq) {
+  if (!wave || wave.length < 2) return;
+
+  const context = audioContextRef.current || new (window.AudioContext || window.webkitAudioContext)();
+  audioContextRef.current = context;
+
+  const sampleRate = context.sampleRate;
+  const cycleLength = wave.length;
+
+  // Create a single-cycle AudioBuffer
+  const buffer = context.createBuffer(1, cycleLength, sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < cycleLength; i++) {
+    data[i] = wave[i];
+  }
+
+  const source = context.createBufferSource();
+  source.buffer = buffer;
+  source.loop = true;
+
+  // Set playback rate to match desired frequency
+  const playbackRate = freq * cycleLength / sampleRate;
+  source.playbackRate.setValueAtTime(playbackRate, context.currentTime);
+
+  // Normalize volume based on waveform RMS
+  const gainNode = context.createGain();
+  const rms = getWaveformRMS(wave);
+  gainNode.gain.setValueAtTime(1 / rms, context.currentTime);
+
+  source.connect(gainNode).connect(context.destination);
+  source.start();
+
+  currentOscillatorRef.current = source;
+
+  drawWaveform(wave, freq, 2);
+}
+
 
   function stopOscillator() {
     if (currentOscillatorRef.current) {
@@ -90,7 +141,7 @@ export function MidiKeyboard({ clip }) {
 
   function handleMouseDown(freq) {
     stopRef.current = false;
-    startOscillator(freq);
+    startOscillator_bufferSame(freq);
   }
 
   function handleMouseUp() {

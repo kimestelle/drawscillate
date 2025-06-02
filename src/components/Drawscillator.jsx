@@ -4,6 +4,8 @@ import '../styles/drawscillator.css';
 
 export function Drawscillator() {
 
+    const volume = 0.05;
+
     const sampleRateGlobal = 44100;
     const waveLength = 341;
 
@@ -253,7 +255,7 @@ export function Drawscillator() {
     
         for (let r = 0; r < repeatCount; r++) {
             for (let i = 0; i < originalLength; i++, offset += 2) {
-                let s = Math.max(-1, Math.min(1, float32Array[i]));
+                let s = Math.max(-1, Math.min(1, float32Array[i] * volume));
                 s = s < 0 ? s * 0x8000 : s * 0x7FFF;
                 view.setInt16(offset, s, true);
             }
