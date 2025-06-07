@@ -4,8 +4,6 @@ import '../styles/drawscillator.css';
 
 export function Drawscillator() {
 
-    const volume = 0.5;
-
     const sampleRateGlobal = 44100;
     const samplesPerCycle = 341;
     //TODO: slider to change this
@@ -434,7 +432,7 @@ export function Drawscillator() {
                 </div>
                 <div className='md:w-full h-full flex flex-col items-center justify-center'>
                     <label>volume</label>
-                    <input type='range' min='0' max='1' step='0.05' value={volume} onChange={(e) => setVolume(e.target.value)} className='w-full h-[2svh] bg-neutral-200 rounded-md' />
+                    <input type='range' min='0' max='1' step='0.05' value={volume} onChange={(e) => setVolume(Number(e.target.value))} className='w-full h-[2svh] bg-neutral-200 rounded-md' />
                 </div>
             </div>
             <MidiKeyboard clip={clips[selectedClip]} volume={volume} />
