@@ -1,13 +1,19 @@
-import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import React, { useState, useRef } from "react";
+import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
 import { Ionicons, Octicons, FontAwesome, MaterialCommunityIcons } from "@expo/vector-icons";
 import { theme, scaleWidth, scaleHeight } from './theme';
+import DrawableCanvas, { DrawableCanvasRef } from "./DrawableCanvas";
 
 export default function CanvasPlayer() {
   const [isPlaying, setIsPlaying] = useState(false);
+  const canvasRef = useRef<DrawableCanvasRef>(null);
 
   const togglePlay = () => {
     setIsPlaying(prev => !prev);
+  };
+
+  const clearCanvas = () => {
+    canvasRef.current?.clear();
   };
 
   return (
@@ -27,8 +33,12 @@ export default function CanvasPlayer() {
         </View>
       </View>
 
-      {/* Canvas Placeholder */}
-      <View style={styles.canvas} />
+      <DrawableCanvas
+        ref={canvasRef}
+        style={styles.canvas}
+        width={scaleWidth(292)}
+        height={scaleHeight(237)}
+      />
 
       {/* Play + Tools */}
       <View style={styles.row}>
@@ -38,7 +48,7 @@ export default function CanvasPlayer() {
           </View>
         </TouchableOpacity>
         <View style={styles.iconGroup}>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={clearCanvas}>
             <MaterialCommunityIcons name="eraser" size={40} color="black" />
           </TouchableOpacity>
           <TouchableOpacity>
@@ -51,10 +61,7 @@ export default function CanvasPlayer() {
 }
 
 const styles = StyleSheet.create({
-  canvas_player: {
-    // borderWidth: 1,
-    // borderColor: "black"
-  },
+  canvas_player: {},
   infoAndHistory: {
     flexDirection: "row",
     alignItems: "center",
