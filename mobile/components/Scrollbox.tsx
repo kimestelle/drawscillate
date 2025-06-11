@@ -59,13 +59,6 @@ export default function ScrollBox({ label, initialValue, onValueChange }: Scroll
     return val;
   };
 
-  // Notify parent callback on change
-  const notifyValueChange = (val: number) => {
-    if (onValueChange) {
-      onValueChange(isNumberMode ? val : NOTES[val]);
-    }
-  };
-
   const applyMomentum = () => {
     const friction = 0.95;
     if (Math.abs(momentumVelocityRef.current) < 0.01) {
@@ -80,7 +73,6 @@ export default function ScrollBox({ label, initialValue, onValueChange }: Scroll
         let next = prev + Math.round(-delta / (baseThreshold * incrementFactor));
         next = clampValue(next);
         triggerHaptic();
-        notifyValueChange(next);
         return next;
       });
     }
@@ -112,10 +104,8 @@ export default function ScrollBox({ label, initialValue, onValueChange }: Scroll
         if (incrementCount !== 0) {
           lastDyRef.current = dy;
           setValue((prev) => {
-            let next = prev + incrementCount;
-            next = clampValue(next);
+            let next = clampValue(prev + incrementCount);
             triggerHaptic();
-            notifyValueChange(next);
             return next;
           });
         }
@@ -136,6 +126,13 @@ export default function ScrollBox({ label, initialValue, onValueChange }: Scroll
       if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
     };
   }, []);
+
+  // ✅ Now triggers parent only after render cycle
+  useEffect(() => {
+    if (onValueChange) {
+      onValueChange(isNumberMode ? value : NOTES[value]);
+    }
+  }, [value]);
 
   const displayValue = (offset: number) => {
     const val = clampValue(value + offset);
@@ -186,13 +183,10 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     justifyContent: "center",
     alignItems: "center",
-
-    // iOS shadow
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    // Android shadow
     elevation: 5,
   },
   noteStack: {
