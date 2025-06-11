@@ -12,7 +12,7 @@ import * as Haptics from "expo-haptics";
 
 type ScrollBoxProps = {
   label: string;
-  initialValue: number | string; // number or note string like "C4"
+  initialValue: number | string;
 };
 
 const NOTES = [
@@ -27,19 +27,14 @@ const NOTES = [
 ];
 
 export default function ScrollBox({ label, initialValue }: ScrollBoxProps) {
-  // Mode flags
   const isNumberMode = typeof initialValue === "number";
   const isNoteMode = typeof initialValue === "string";
-
-  // State depends on mode:
-  // - number: value is the integer itself
-  // - note: value is index in NOTES array
   const initialIndex = isNoteMode ? NOTES.indexOf(initialValue) : -1;
 
   const [value, setValue] = useState<number>(() => {
     if (isNumberMode) return Math.max(0, initialValue as number);
     else if (isNoteMode && initialIndex >= 0) return initialIndex;
-    else return 0; // fallback
+    else return 0;
   });
 
   const baseThreshold = 4;
@@ -54,9 +49,8 @@ export default function ScrollBox({ label, initialValue }: ScrollBoxProps) {
   };
 
   const clampValue = (val: number) => {
-    if (isNumberMode) {
-      return Math.max(0, val); // no upper bound
-    } else if (isNoteMode) {
+    if (isNumberMode) return Math.max(0, val);
+    else if (isNoteMode) {
       if (val < 0) return 0;
       if (val >= NOTES.length) return NOTES.length - 1;
       return val;
@@ -66,7 +60,6 @@ export default function ScrollBox({ label, initialValue }: ScrollBoxProps) {
 
   const applyMomentum = () => {
     const friction = 0.95;
-
     if (Math.abs(momentumVelocityRef.current) < 0.01) {
       momentumVelocityRef.current = 0;
       animationFrameId.current = null;
@@ -74,7 +67,6 @@ export default function ScrollBox({ label, initialValue }: ScrollBoxProps) {
     }
 
     const delta = momentumVelocityRef.current * 10;
-
     if (Math.abs(delta) > baseThreshold * incrementFactor) {
       setValue((prev) => {
         let next = prev + Math.round(-delta / (baseThreshold * incrementFactor));
@@ -102,7 +94,6 @@ export default function ScrollBox({ label, initialValue }: ScrollBoxProps) {
 
         const dy = gestureState.dy;
         const vy = gestureState.vy;
-
         const velocityScale = Math.min(Math.abs(vy) * 10, 5);
         const deltaRaw = (dy - lastDyRef.current) * velocityScale;
 
@@ -123,7 +114,6 @@ export default function ScrollBox({ label, initialValue }: ScrollBoxProps) {
       onPanResponderRelease: (_evt, gestureState) => {
         lastDyRef.current = 0;
         momentumVelocityRef.current = -gestureState.vy;
-
         if (!animationFrameId.current) {
           animationFrameId.current = requestAnimationFrame(applyMomentum);
         }
@@ -133,20 +123,24 @@ export default function ScrollBox({ label, initialValue }: ScrollBoxProps) {
 
   useEffect(() => {
     return () => {
-      if (animationFrameId.current) {
-        cancelAnimationFrame(animationFrameId.current);
-      }
+      if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
     };
   }, []);
 
-  // Display text depends on mode
-  const displayText = isNumberMode ? value.toString() : NOTES[value];
+  const displayValue = (offset: number) => {
+    const val = clampValue(value + offset);
+    return isNumberMode ? val.toString() : NOTES[val];
+  };
 
   return (
     <View style={styles.container}>
       <Text style={styles.text}>{label}</Text>
       <View style={styles.noteBox} {...panResponder.panHandlers}>
-        <Text style={styles.noteText}>{displayText}</Text>
+        <View style={styles.noteStack}>
+          { (value != 0) ? <Text style={styles.noteFaded}>{displayValue(-1)}</Text> : <Text style={styles.noteFaded}> ^^ </Text>}
+          <Text style={styles.noteText}>{displayValue(0)}</Text>
+          { (value != NOTES.length-1) ? <Text style={styles.noteFaded}>{displayValue(1)}</Text> : <Text style={styles.noteFaded}> __ </Text>}
+        </View>
       </View>
     </View>
   );
@@ -170,10 +164,11 @@ const styles = StyleSheet.create({
     borderWidth: theme.borderWidth,
     borderRadius: 6,
     borderColor: "black",
-    alignItems: "center",
-    justifyContent: "center",
-
     backgroundColor: "white",
+    overflow: "hidden",
+    justifyContent: "center",
+    alignItems: "center",
+
     // iOS shadow
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -182,8 +177,20 @@ const styles = StyleSheet.create({
     // Android shadow
     elevation: 5,
   },
+  noteStack: {
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   noteText: {
     fontSize: 30,
     fontWeight: "normal",
+    color: "black",
+  },
+  noteFaded: {
+    fontSize: 18,
+    color: "#888",
+    opacity: 0.5,
+    marginVertical: -3
   },
 });
