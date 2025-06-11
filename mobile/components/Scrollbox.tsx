@@ -13,6 +13,7 @@ import * as Haptics from "expo-haptics";
 type ScrollBoxProps = {
   label: string;
   initialValue: number | string;
+  onValueChange?: (val: number | string) => void;
 };
 
 const NOTES = [
@@ -26,7 +27,7 @@ const NOTES = [
   "C7"
 ];
 
-export default function ScrollBox({ label, initialValue }: ScrollBoxProps) {
+export default function ScrollBox({ label, initialValue, onValueChange }: ScrollBoxProps) {
   const isNumberMode = typeof initialValue === "number";
   const isNoteMode = typeof initialValue === "string";
   const initialIndex = isNoteMode ? NOTES.indexOf(initialValue) : -1;
@@ -58,6 +59,13 @@ export default function ScrollBox({ label, initialValue }: ScrollBoxProps) {
     return val;
   };
 
+  // Notify parent callback on change
+  const notifyValueChange = (val: number) => {
+    if (onValueChange) {
+      onValueChange(isNumberMode ? val : NOTES[val]);
+    }
+  };
+
   const applyMomentum = () => {
     const friction = 0.95;
     if (Math.abs(momentumVelocityRef.current) < 0.01) {
@@ -72,6 +80,7 @@ export default function ScrollBox({ label, initialValue }: ScrollBoxProps) {
         let next = prev + Math.round(-delta / (baseThreshold * incrementFactor));
         next = clampValue(next);
         triggerHaptic();
+        notifyValueChange(next);
         return next;
       });
     }
@@ -106,6 +115,7 @@ export default function ScrollBox({ label, initialValue }: ScrollBoxProps) {
             let next = prev + incrementCount;
             next = clampValue(next);
             triggerHaptic();
+            notifyValueChange(next);
             return next;
           });
         }
@@ -137,9 +147,17 @@ export default function ScrollBox({ label, initialValue }: ScrollBoxProps) {
       <Text style={styles.text}>{label}</Text>
       <View style={styles.noteBox} {...panResponder.panHandlers}>
         <View style={styles.noteStack}>
-          { (value != 0) ? <Text style={styles.noteFaded}>{displayValue(-1)}</Text> : <Text style={styles.noteFaded}> ^^ </Text>}
+          {(value !== 0) ? (
+            <Text style={styles.noteFaded}>{displayValue(-1)}</Text>
+          ) : (
+            <Text style={styles.noteFaded}> ^^ </Text>
+          )}
           <Text style={styles.noteText}>{displayValue(0)}</Text>
-          { (value != NOTES.length-1) ? <Text style={styles.noteFaded}>{displayValue(1)}</Text> : <Text style={styles.noteFaded}> __ </Text>}
+          {(value !== NOTES.length - 1) ? (
+            <Text style={styles.noteFaded}>{displayValue(1)}</Text>
+          ) : (
+            <Text style={styles.noteFaded}> __ </Text>
+          )}
         </View>
       </View>
     </View>
@@ -170,7 +188,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
 
     // iOS shadow
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
@@ -191,6 +209,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: "#888",
     opacity: 0.5,
-    marginVertical: -3
+    marginVertical: -3,
   },
 });
