@@ -107,6 +107,20 @@ const DrawableCanvas = forwardRef<DrawableCanvasRef, DrawableCanvasProps>(
           {fullPath !== "" && (
             <Path d={fullPath} stroke="blue" strokeWidth={6} fill="none" strokeLinecap="round" strokeLinejoin="round"/>
           )}
+
+          {[1, 2, 3].map((dist) => 
+            <Line
+                key={dist}
+                x1={width * dist / 4}
+                y1={0}
+                x2={width * dist / 4}
+                y2={height}
+                stroke="#ccc" // light gray color
+                opacity={0.2}
+                strokeWidth={2} // thin line
+            />
+          )}
+
         </Svg>
       </View>
     );
