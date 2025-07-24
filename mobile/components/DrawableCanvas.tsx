@@ -11,6 +11,7 @@ type DrawableCanvasProps = {
 
 export type DrawableCanvasRef = {
   clear: () => void;
+  getPoints: () => Point[];
 };
 
 const DrawableCanvas = forwardRef<DrawableCanvasRef, DrawableCanvasProps>(
@@ -18,6 +19,7 @@ const DrawableCanvas = forwardRef<DrawableCanvasRef, DrawableCanvasProps>(
     const [fullPath, setFullPath] = useState<string>("");
     const drawingRef = useRef(false);
     const lastPointRef = useRef<Point | null>(null);
+    const pointsRef = useRef<Point[]>([]);
 
     const clamp = (val: number, min: number, max: number) =>
       Math.min(Math.max(val, min), max);
@@ -44,6 +46,7 @@ const DrawableCanvas = forwardRef<DrawableCanvasRef, DrawableCanvasProps>(
 
         setFullPath((prev) => `${prev} ${segment}`);
         lastPointRef.current = { x, y };
+        pointsRef.current = [{ x, y }];
         drawingRef.current = true;
       },
 
@@ -60,6 +63,7 @@ const DrawableCanvas = forwardRef<DrawableCanvasRef, DrawableCanvasProps>(
         const segment = `L${x},${y}`;
         setFullPath((prev) => `${prev} ${segment}`);
         lastPointRef.current = { x, y };
+        pointsRef.current.push({ x, y });
       },
 
       onPanResponderRelease: () => {
@@ -69,9 +73,13 @@ const DrawableCanvas = forwardRef<DrawableCanvasRef, DrawableCanvasProps>(
 
     useImperativeHandle(ref, () => ({
       clear() {
-        setFullPath("");
+        setFullPath('');
         lastPointRef.current = null;
+        pointsRef.current = [];
       },
+      getPoints() {
+        return pointsRef.current;
+      }
     }));
 
     return (
