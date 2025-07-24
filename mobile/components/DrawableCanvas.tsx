@@ -1,6 +1,7 @@
-import React, { useState, useImperativeHandle, forwardRef } from "react";
+import React, { useState, useImperativeHandle, forwardRef, useRef } from "react";
 import { View, PanResponder, StyleProp, ViewStyle } from "react-native";
 import Svg, { Path, Line } from "react-native-svg";
+import { Point } from "react-native-svg/lib/typescript/elements/Shape";
 
 type DrawableCanvasProps = {
   width: number;
@@ -14,38 +15,62 @@ export type DrawableCanvasRef = {
 
 const DrawableCanvas = forwardRef<DrawableCanvasRef, DrawableCanvasProps>(
   ({ width, height, style }, ref) => {
-    const [paths, setPaths] = useState<string[]>([]);
-    const [currentPath, setCurrentPath] = useState<string>("");
+    const [fullPath, setFullPath] = useState<string>("");
+    const drawingRef = useRef(false);
+    const lastPointRef = useRef<Point | null>(null);
 
     const clamp = (val: number, min: number, max: number) =>
-        Math.min(Math.max(val, min), max);
+      Math.min(Math.max(val, min), max);
 
-        const panResponder = PanResponder.create({
-        onStartShouldSetPanResponder: () => true,
-        onPanResponderGrant: (e) => {
-            const { locationX, locationY } = e.nativeEvent;
-            const clampedX = clamp(locationX, 0, width-10);
-            const clampedY = clamp(locationY, 0, height-10);
-            setCurrentPath(`M${clampedX},${clampedY}`);
-        },
-        onPanResponderMove: (e) => {
-            const { locationX, locationY } = e.nativeEvent;
-            const clampedX = clamp(locationX, 0, width-10);
-            const clampedY = clamp(locationY, 0, height-10);
-            setCurrentPath((prev) => `${prev} L${clampedX},${clampedY}`);
-        },
-        onPanResponderRelease: () => {
-            setPaths((prev) => [...prev, currentPath]);
-            setCurrentPath("");
-        },
+    const panResponder = PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+
+      onPanResponderGrant: (e) => {
+        const { locationX, locationY } = e.nativeEvent;
+        const x = clamp(locationX, 0, width - 10);
+        const y = clamp(locationY, 0, height - 10);
+        const last = lastPointRef.current;
+
+        let segment = "";
+        if (!last) {
+          // First stroke: baseline to point
+          segment = `M0,${height / 2} L${x},${y}`;
+        } else if (x > last.x) {
+          segment = `M${last.x},${last.y} L${x},${y}`;
+        } else {
+          drawingRef.current = false;
+          return;
+        }
+
+        setFullPath((prev) => `${prev} ${segment}`);
+        lastPointRef.current = { x, y };
+        drawingRef.current = true;
+      },
+
+      onPanResponderMove: (e) => {
+        if (!drawingRef.current) return;
+
+        const { locationX, locationY } = e.nativeEvent;
+        const x = clamp(locationX, 0, width - 10);
+        const y = clamp(locationY, 0, height - 10);
+        const last = lastPointRef.current;
+
+        if (!last || x <= last.x) return;
+
+        const segment = `L${x},${y}`;
+        setFullPath((prev) => `${prev} ${segment}`);
+        lastPointRef.current = { x, y };
+      },
+
+      onPanResponderRelease: () => {
+        drawingRef.current = false;
+      },
     });
 
-
-    // Expose clear method to parent via ref
     useImperativeHandle(ref, () => ({
       clear() {
-        setPaths([]);
-        setCurrentPath("");
+        setFullPath("");
+        lastPointRef.current = null;
       },
     }));
 
@@ -75,16 +100,12 @@ const DrawableCanvas = forwardRef<DrawableCanvasRef, DrawableCanvasProps>(
             y1={height / 2}
             x2={width}
             y2={height / 2}
-            stroke="#ccc" // light gray color
-            strokeWidth={6} // thin line
-            strokeDasharray="4 4" // optional dashed line for subtlety
+            stroke="#ccc"
+            strokeWidth={6}
+            strokeDasharray="4 4"
           />
-
-          {paths.map((d, i) => (
-            <Path key={i} d={d} stroke="blue" strokeWidth={6} fill="none" />
-          ))}
-          {currentPath !== "" && (
-            <Path d={currentPath} stroke="blue" strokeWidth={6} fill="none" />
+          {fullPath !== "" && (
+            <Path d={fullPath} stroke="blue" strokeWidth={6} fill="none" strokeLinecap="round" strokeLinejoin="round"/>
           )}
         </Svg>
       </View>
@@ -92,4 +113,5 @@ const DrawableCanvas = forwardRef<DrawableCanvasRef, DrawableCanvasProps>(
   }
 );
 
+DrawableCanvas.displayName = "DrawableCanvas";
 export default DrawableCanvas;
