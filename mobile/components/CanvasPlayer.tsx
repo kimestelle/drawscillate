@@ -7,12 +7,19 @@ import { pointsToWave, float32ToWav, arrayBufferToBase64 } from "./utils/waveHel
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';
 import * as FileSystem from 'expo-file-system';
 
-export default function CanvasPlayer() {
-  const volume = 1;
+type CanvasPlayerProps = {
+  volume: number;
+};
+
+export default function CanvasPlayer({ volume }: CanvasPlayerProps) {
   const sampleRateGlobal = 44100;
   const samplesPerCycle = 341;
   //TODO: slider to change this
   const repeatCount = 50;
+
+  useEffect(() => {
+    console.log(volume);
+  }, [volume]);
 
   const frequencyHz = sampleRateGlobal / samplesPerCycle;
   const wavelengthSeconds = 1 / frequencyHz;
@@ -63,7 +70,7 @@ export default function CanvasPlayer() {
     setWavePoints(wave);
     console.log("processed wave:", wave);
 
-    const wavBuffer = float32ToWav(wave, volume, sampleRateGlobal, repeatCount);
+    const wavBuffer = float32ToWav(wave, sampleRateGlobal, repeatCount);
     //convert array buffer to base64
     console.log("wavBuffer slice:", new Uint8Array(wavBuffer).slice(44, 54)); // Skip header
 
@@ -76,6 +83,7 @@ export default function CanvasPlayer() {
     setFileUri(fileUri);
     //play sound
     const { sound } = await Audio.Sound.createAsync({ uri: fileUri });
+    sound.setVolumeAsync(volume);
     await sound.playAsync();
   };
 
@@ -88,6 +96,7 @@ export default function CanvasPlayer() {
       { uri: fileUri },
       { shouldPlay: true }
     );
+    sound.setVolumeAsync(volume);
     await sound.playAsync();
     console.log("Playing sound from:", fileUri);
   }, [fileUri]);

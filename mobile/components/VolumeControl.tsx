@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -10,11 +10,19 @@ import {
 import { theme, scaleHeight, scaleWidth } from "./theme";
 import * as Haptics from "expo-haptics";
 
-export default function VolumeControl() {
-  const [volume, setVolume] = useState(0.4); // 0 to 1
+type VolumeControlProps = {
+  setVolume: (volume: number) => void;
+};
+
+export default function VolumeControl({ setVolume }: VolumeControlProps) {
+  const [volume, setLocalVolume] = useState(0.4);
   const containerHeight = scaleHeight(241);
   const volumeRef = useRef(volume);
   const lastHapticRef = useRef(Math.floor(volume * 10)); // track last threshold
+
+  useEffect(() => {
+    setVolume(volume);
+  }, [volume, setVolume]);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -28,6 +36,7 @@ export default function VolumeControl() {
           Haptics.selectionAsync();
         }
         setVolume(newVolume);
+        setLocalVolume(newVolume); // update local state, too
       },
       onPanResponderGrant: () => {
         volumeRef.current = volume;

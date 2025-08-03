@@ -44,9 +44,9 @@ export function pointsToWave(
     return wave;
   }
 
-export function float32ToWav(float32Array: Float32Array, volume: number, sampleRate: number, repeatCountInput: number ) {
+export function float32ToWav(float32Array: Float32Array, sampleRate: number, repeatCountInput: number ) {
 console.log("float32Array:", float32Array.slice(0, 10));
-
+    const volume = 1
     const numChannels = 1;
     const bitsPerSample = 16;
     const bytesPerSample = bitsPerSample / 8;

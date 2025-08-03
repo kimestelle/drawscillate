@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { StatusBar } from "expo-status-bar";
 
@@ -9,13 +9,15 @@ import VolumeControl from "./VolumeControl";
 import { scaleHeight, scaleWidth } from "./theme";
 
 export default function App() {
+  const [volume, setVolume] = useState(1);
+
   return (
     <View style={styles.container }>
       <StatusBar style="auto" />
 
       <View style={{ transform: [{ translateY: scaleHeight(0) }] }}>
         <View style={{ transform: [{ translateY: scaleHeight(10) }] }}>
-            <CanvasPlayer />
+            <CanvasPlayer volume={volume} />
         </View>
         
         <View style={styles.controls} >
@@ -33,7 +35,7 @@ export default function App() {
                     transform: [{ translateY: scaleHeight(142) }, { translateX: scaleWidth(20) }] }}> 
                     {/* TODO: insert drawing here */}
                 </View>
-                <VolumeControl />
+                <VolumeControl setVolume={setVolume} />
             </View>
         </View>
       </View>
