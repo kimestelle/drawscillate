@@ -4,7 +4,7 @@ import { Ionicons, Octicons, FontAwesome, MaterialCommunityIcons } from "@expo/v
 import { theme, scaleWidth, scaleHeight } from './theme';
 import DrawableCanvas, { DrawableCanvasRef } from "./DrawableCanvas";
 import { pointsToWave, float32ToWav, arrayBufferToBase64 } from "./utils/waveHelpers";
-import { Audio } from 'expo-av';
+import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';
 import * as FileSystem from 'expo-file-system';
 
 export default function CanvasPlayer() {
@@ -32,6 +32,24 @@ export default function CanvasPlayer() {
   const clearCanvas = () => {
     canvasRef.current?.clear();
   };
+
+  //initialize audio from expo-av
+  async function initializeAudio(): Promise<void> {
+    try {
+      await Audio.setAudioModeAsync({
+        playsInSilentModeIOS: true,
+        allowsRecordingIOS: false,
+        interruptionModeIOS: InterruptionModeIOS.MixWithOthers,
+        interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
+      });
+    } catch (error) {
+      console.error('Error initializing audio system:', error);
+    }
+  }
+
+  useEffect(() => {
+    initializeAudio();
+  }, []);
 
   const processAndStorePoints = async () => {
     const points = canvasRef.current?.getPoints() || [];
