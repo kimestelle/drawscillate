@@ -7,7 +7,21 @@ import { pointsToWave, float32ToWav, arrayBufferToBase64 } from "./utils/waveHel
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';
 import * as FileSystem from 'expo-file-system';
 
-export default function CanvasPlayer() {
+export default function CanvasPlayer({
+  bpm,
+  isPlaying,
+  setIsPlaying,
+  setCurrentDotIndex
+}: {
+  bpm: number;
+  isPlaying: boolean;
+  setIsPlaying: React.Dispatch<React.SetStateAction<boolean>>;
+  setCurrentDotIndex: React.Dispatch<React.SetStateAction<number>>;
+}) {
+
+  const soundRef = useRef<Audio.Sound | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
   const volume = 1;
   const sampleRateGlobal = 44100;
   const samplesPerCycle = 341;
@@ -20,14 +34,18 @@ export default function CanvasPlayer() {
   console.log("Wavelength (s): ", wavelengthSeconds);
   console.log("Frequency (Hz): ", frequencyHz);
 
-  const [isPlaying, setIsPlaying] = useState(false);
   const [wavePoints, setWavePoints] = useState<Float32Array | null>(null);
   const canvasRef = useRef<DrawableCanvasRef>(null);
   const [fileUri, setFileUri] = useState<string | null>(null);
 
   const togglePlay = () => {
+    if (!wavePoints || wavePoints.length === 0) {
+      console.warn("No waveform to play.");
+      return;
+    }
     setIsPlaying(prev => !prev);
   };
+
 
   const clearCanvas = () => {
     canvasRef.current?.clear();
@@ -51,6 +69,82 @@ export default function CanvasPlayer() {
     initializeAudio();
   }, []);
 
+  useEffect(() => {
+    if (!isPlaying || !fileUri || !wavePoints) return;
+
+    const msPerBeat = 60000 / bpm;
+    let beatCount = 0;
+    let startTime = Date.now();
+
+    let isCancelled = false;
+
+    const tick = async () => {
+      if (isCancelled || !soundRef.current) return;
+
+      const targetTime = startTime + beatCount * msPerBeat;
+      const drift = Date.now() - targetTime;
+
+      try {
+        await soundRef.current.stopAsync();
+        await soundRef.current.setPositionAsync(0);
+        await soundRef.current.playAsync();
+      } catch (err) {
+        console.warn("Playback error:", err);
+      }
+
+      setCurrentDotIndex((prev) => (prev + 1) % 4);
+      beatCount++;
+
+      timeoutRef.current = setTimeout(tick, msPerBeat - drift);
+    };
+
+    const startPlayback = async () => {
+      // 🔁 Cleanup old loop
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+      if (soundRef.current) {
+        try {
+          await soundRef.current.stopAsync();
+          await soundRef.current.unloadAsync();
+        } catch (e) {
+          console.warn("Failed to stop/unload previous sound", e);
+        }
+        soundRef.current = null;
+      }
+
+      setCurrentDotIndex(0);
+
+      try {
+        const { sound } = await Audio.Sound.createAsync(
+          { uri: fileUri },
+          { shouldPlay: false }
+        );
+        soundRef.current = sound;
+        startTime = Date.now();
+        tick(); // 🎯 Start ticking with new BPM
+      } catch (e) {
+        console.error("Failed to create sound", e);
+      }
+    };
+
+    startPlayback();
+
+    return () => {
+      isCancelled = true;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+      if (soundRef.current) {
+        soundRef.current.stopAsync().catch(() => {});
+        soundRef.current.unloadAsync().catch(() => {});
+        soundRef.current = null;
+      }
+    };
+  }, [isPlaying, fileUri, wavePoints, bpm]);
+
   const processAndStorePoints = async () => {
     const points = canvasRef.current?.getPoints() || [];
     if (points.length === 0) return;
@@ -63,7 +157,21 @@ export default function CanvasPlayer() {
     setWavePoints(wave);
     console.log("processed wave:", wave);
 
-    const wavBuffer = float32ToWav(wave, volume, sampleRateGlobal, repeatCount);
+    // const wavBuffer = float32ToWav(wave, volume, sampleRateGlobal, repeatCount);
+    const msPerBeat = 60000 / bpm;
+    const waveDurationSeconds = wave.length / sampleRateGlobal;
+    const waveDurationMs = waveDurationSeconds * 1000;
+
+    // Calculate how many times the waveform can fit in one beat
+    const repeatCountAdjusted = Math.max(1, Math.floor(msPerBeat / waveDurationMs));
+
+    console.log("wave duration (ms):", waveDurationMs);
+    console.log("msPerBeat:", msPerBeat);
+    console.log("adjusted repeat count:", repeatCountAdjusted);
+
+    const wavBuffer = float32ToWav(wave, volume, sampleRateGlobal, repeatCountAdjusted);
+
+
     //convert array buffer to base64
     console.log("wavBuffer slice:", new Uint8Array(wavBuffer).slice(44, 54)); // Skip header
 
@@ -92,11 +200,11 @@ export default function CanvasPlayer() {
     console.log("Playing sound from:", fileUri);
   }, [fileUri]);
 
-  useEffect(() => {
-    if (isPlaying && wavePoints) {
-      playWave();
-    }
-  }, [isPlaying, wavePoints, playWave]);
+  // useEffect(() => {
+  //   if (isPlaying && wavePoints) {
+  //     playWave();
+  //   }
+  // }, [isPlaying, wavePoints, playWave]);
 
   return (
     <View style={styles.canvas_player}>

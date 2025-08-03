@@ -8,19 +8,42 @@ import PitchControl from "./PitchControl";
 import VolumeControl from "./VolumeControl";
 import { scaleHeight, scaleWidth } from "./theme";
 
+import { useState, useEffect } from "react";
+
 export default function App() {
+  // const [tempo, setTempo] = useState(128);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentDotIndex, setCurrentDotIndex] = useState(0);
+
+  const [bpm, setBpm] = useState(128);
+  const [debouncedBpm, setDebouncedBpm] = useState(bpm);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedBpm(bpm), 100);
+    return () => clearTimeout(t);
+  }, [bpm]);
+
   return (
     <View style={styles.container }>
       <StatusBar style="auto" />
 
       <View style={{ transform: [{ translateY: scaleHeight(0) }] }}>
         <View style={{ transform: [{ translateY: scaleHeight(10) }] }}>
-            <CanvasPlayer />
+            <CanvasPlayer
+              isPlaying={isPlaying}
+              setIsPlaying={setIsPlaying}
+              bpm={debouncedBpm}
+              setCurrentDotIndex={setCurrentDotIndex}
+            />
         </View>
         
         <View style={styles.controls} >
-            <TempoControls />
-        
+            <TempoControls
+              isPlaying={isPlaying}
+              onTempoChange={setBpm}
+              currentDotIndex={currentDotIndex}
+            />
+
             <View style={styles.pitch_volume_controls}>
                 <View style={{ transform: [{ translateY: scaleHeight(54) }] }}>
                     <PitchControl />

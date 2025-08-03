@@ -3,12 +3,16 @@ import { View, Text, StyleSheet } from "react-native";
 import ScrollBox from "./Scrollbox";
 import { theme, scaleWidth, scaleHeight } from './theme';
 
-export default function TempoControls() {
+export default function TempoControls({
+  isPlaying,
+  onTempoChange,
+  currentDotIndex,
+}: {
+  isPlaying: boolean;
+  onTempoChange: (tempo: number) => void;
+  currentDotIndex: number;
+}) {
     const [currentTempo, setCurrentTempo] = useState<number>(0);
-
-    useEffect(() => {
-      console.log("Current Tempo: ", currentTempo);
-    }, [currentTempo]);
 
     return (
         <View style={styles.tempo_controls}>
@@ -16,14 +20,17 @@ export default function TempoControls() {
             <View style={styles.row}>
               <View style={styles.dots}>
                 {[0, 1, 2, 3].map((i) => (
-                  <View key={i} style={[styles.dot, i === 1 && styles.activeDot]} />
+                  <View key={i} style={[styles.dot, i === currentDotIndex && styles.activeDot]} />
                 ))}
               </View>
               <ScrollBox 
                 label={"BPM"} 
                 initialValue={128} 
                 onValueChange={(val) => {
-                  if (typeof val === "number") setCurrentTempo(val);
+                  if (typeof val === "number") {
+                    setCurrentTempo(val);
+                    onTempoChange(val);
+                  }
                 }}
                />
             </View>
