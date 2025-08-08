@@ -48,7 +48,7 @@ export default function CanvasPlayer({pitchFrequency}: CanvasPlayerProps) {
       }
       if (diff) setPitchedWave(next);
     }
-  }, [wavePoints, pitchFrequency, frequencyHz]);
+  }, [wavePoints, pitchFrequency, frequencyHz, pitchedWave]);
 
   const togglePlay = () => {
     setIsPlaying(prev => !prev);
