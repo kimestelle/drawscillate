@@ -84,7 +84,7 @@ export default function CanvasPlayer({ volume }: CanvasPlayerProps) {
     //play sound
     const { sound } = await Audio.Sound.createAsync({ uri: fileUri });
     sound.setVolumeAsync(volume);
-    await sound.playAsync();
+    sound.playAsync();
   };
 
   const playWave = useCallback(async () => {
@@ -96,10 +96,11 @@ export default function CanvasPlayer({ volume }: CanvasPlayerProps) {
       { uri: fileUri },
       { shouldPlay: true }
     );
+    console.log("Playing sound from file:", fileUri);
     sound.setVolumeAsync(volume);
-    await sound.playAsync();
+    sound.playAsync();
     console.log("Playing sound from:", fileUri);
-  }, [fileUri]);
+  }, [fileUri, volume]);
 
   useEffect(() => {
     if (isPlaying && wavePoints) {
