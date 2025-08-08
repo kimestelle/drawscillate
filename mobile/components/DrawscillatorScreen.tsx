@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, StyleSheet } from "react-native";
 import { StatusBar } from "expo-status-bar";
 
@@ -11,6 +11,17 @@ import { scaleHeight, scaleWidth } from "./theme";
 export default function App() {
   const [pitchFrequency, setPitchFrequency] = useState(0);
   const [volume, setVolume] = useState(1);
+  // const [tempo, setTempo] = useState(128);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentDotIndex, setCurrentDotIndex] = useState(0);
+
+  const [bpm, setBpm] = useState(128);
+  const [debouncedBpm, setDebouncedBpm] = useState(bpm);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedBpm(bpm), 100);
+    return () => clearTimeout(t);
+  }, [bpm]);
 
   return (
     <View style={styles.container }>
@@ -18,12 +29,23 @@ export default function App() {
 
       <View style={{ transform: [{ translateY: scaleHeight(0) }] }}>
         <View style={{ transform: [{ translateY: scaleHeight(10) }] }}>
-            <CanvasPlayer pitchFrequency={pitchFrequency} volume={volume}/>
+            <CanvasPlayer
+              pitchFrequency={pitchFrequency} 
+              volume={volume}
+              isPlaying={isPlaying}
+              setIsPlaying={setIsPlaying}
+              bpm={debouncedBpm}
+              setCurrentDotIndex={setCurrentDotIndex}
+            />
         </View>
         
         <View style={styles.controls} >
-            <TempoControls />
-        
+            <TempoControls
+              isPlaying={isPlaying}
+              onTempoChange={setBpm}
+              currentDotIndex={currentDotIndex}
+            />
+
             <View style={styles.pitch_volume_controls}>
                 <View style={{ transform: [{ translateY: scaleHeight(54) }] }}>
                     <PitchControl setPitchFrequency={setPitchFrequency}/>
