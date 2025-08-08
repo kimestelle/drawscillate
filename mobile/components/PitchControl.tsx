@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { theme } from './theme';
+import { View, StyleSheet } from "react-native";
 import ScrollBox from "./Scrollbox";
 
 type PitchControlProps = {

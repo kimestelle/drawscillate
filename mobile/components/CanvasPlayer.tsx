@@ -27,20 +27,28 @@ export default function CanvasPlayer({pitchFrequency}: CanvasPlayerProps) {
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [wavePoints, setWavePoints] = useState<Float32Array | null>(null);
+  const [pitchedWave, setPitchedWave] = useState<Float32Array | null>(null);
   const canvasRef = useRef<DrawableCanvasRef>(null);
   const [fileUri, setFileUri] = useState<string | null>(null);
 
   useEffect(() => {
-    if (pitchFrequency) {
-      console.log("Pitch Frequency set to:", pitchFrequency);
-      if (wavePoints && wavePoints.length > 0) {
-        const wave = createPitchedWave(wavePoints, pitchFrequency, frequencyHz);
-        setWavePoints(wave);
-        console.log("Created pitched wave:", wave);
-      }
-      
+    if (!wavePoints) {
+      setPitchedWave(null);
+      return;
     }
-  }, [pitchFrequency, wavePoints, frequencyHz]);
+    const target = pitchFrequency || frequencyHz;
+    const next = createPitchedWave(wavePoints, target, frequencyHz);
+
+    if (!pitchedWave || pitchedWave.length !== next.length) {
+      setPitchedWave(next);
+    } else {
+      let diff = false;
+      for (let i = 0; i < Math.min(8, next.length); i++) {
+        if (Math.abs(pitchedWave[i] - next[i]) > 1e-6) { diff = true; break; }
+      }
+      if (diff) setPitchedWave(next);
+    }
+  }, [wavePoints, pitchFrequency, frequencyHz]);
 
   const togglePlay = () => {
     setIsPlaying(prev => !prev);
@@ -80,7 +88,9 @@ export default function CanvasPlayer({pitchFrequency}: CanvasPlayerProps) {
     setWavePoints(wave);
     console.log("processed wave:", wave);
 
-    const wavBuffer = float32ToWav(wave, volume, sampleRateGlobal, repeatCount);
+    const waveToUse = pitchedWave || wave;
+
+    const wavBuffer = float32ToWav(waveToUse, volume, sampleRateGlobal, repeatCount);
     //convert array buffer to base64
     console.log("wavBuffer slice:", new Uint8Array(wavBuffer).slice(44, 54)); // Skip header
 
@@ -93,7 +103,7 @@ export default function CanvasPlayer({pitchFrequency}: CanvasPlayerProps) {
     setFileUri(fileUri);
     //play sound
     const { sound } = await Audio.Sound.createAsync({ uri: fileUri });
-    await sound.playAsync();
+    sound.playAsync();
   };
 
   const playWave = useCallback(async () => {
@@ -105,7 +115,7 @@ export default function CanvasPlayer({pitchFrequency}: CanvasPlayerProps) {
       { uri: fileUri },
       { shouldPlay: true }
     );
-    await sound.playAsync();
+    sound.playAsync();
     console.log("Playing sound from:", fileUri);
   }, [fileUri]);
 
