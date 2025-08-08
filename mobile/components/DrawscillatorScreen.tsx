@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { StatusBar } from "expo-status-bar";
 
@@ -9,13 +9,14 @@ import VolumeControl from "./VolumeControl";
 import { scaleHeight, scaleWidth } from "./theme";
 
 export default function App() {
+  const [pitchFrequency, setPitchFrequency] = useState(0);
   return (
     <View style={styles.container }>
       <StatusBar style="auto" />
 
       <View style={{ transform: [{ translateY: scaleHeight(0) }] }}>
         <View style={{ transform: [{ translateY: scaleHeight(10) }] }}>
-            <CanvasPlayer />
+            <CanvasPlayer pitchFrequency={pitchFrequency}/>
         </View>
         
         <View style={styles.controls} >
@@ -23,7 +24,7 @@ export default function App() {
         
             <View style={styles.pitch_volume_controls}>
                 <View style={{ transform: [{ translateY: scaleHeight(54) }] }}>
-                    <PitchControl />
+                    <PitchControl setPitchFrequency={setPitchFrequency}/>
                 </View>
                 
                 <View style={{ 

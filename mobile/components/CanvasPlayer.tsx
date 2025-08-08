@@ -5,9 +5,14 @@ import { theme, scaleWidth, scaleHeight } from './theme';
 import DrawableCanvas, { DrawableCanvasRef } from "./DrawableCanvas";
 import { pointsToWave, float32ToWav, arrayBufferToBase64 } from "./utils/waveHelpers";
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';
+import { createPitchedWave } from "./utils/midiHelpers";
 import * as FileSystem from 'expo-file-system';
 
-export default function CanvasPlayer() {
+type CanvasPlayerProps = {
+  pitchFrequency: number;
+}
+
+export default function CanvasPlayer({pitchFrequency}: CanvasPlayerProps) {
   const volume = 1;
   const sampleRateGlobal = 44100;
   const samplesPerCycle = 341;
@@ -24,6 +29,18 @@ export default function CanvasPlayer() {
   const [wavePoints, setWavePoints] = useState<Float32Array | null>(null);
   const canvasRef = useRef<DrawableCanvasRef>(null);
   const [fileUri, setFileUri] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (pitchFrequency) {
+      console.log("Pitch Frequency set to:", pitchFrequency);
+      if (wavePoints && wavePoints.length > 0) {
+        const wave = createPitchedWave(wavePoints, pitchFrequency, frequencyHz);
+        setWavePoints(wave);
+        console.log("Created pitched wave:", wave);
+      }
+      
+    }
+  }, [pitchFrequency, wavePoints, frequencyHz]);
 
   const togglePlay = () => {
     setIsPlaying(prev => !prev);
