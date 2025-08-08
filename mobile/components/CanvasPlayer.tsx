@@ -10,14 +10,18 @@ import * as FileSystem from 'expo-file-system';
 
 type CanvasPlayerProps = {
   pitchFrequency: number;
+  volume: number;
 }
 
-export default function CanvasPlayer({pitchFrequency}: CanvasPlayerProps) {
-  const volume = 1;
+export default function CanvasPlayer({pitchFrequency, volume}: CanvasPlayerProps) {
   const sampleRateGlobal = 44100;
   const samplesPerCycle = 341;
   //TODO: slider to change this
   const repeatCount = 50;
+
+  useEffect(() => {
+    console.log(volume);
+  }, [volume]);
 
   const frequencyHz = sampleRateGlobal / samplesPerCycle;
   const wavelengthSeconds = 1 / frequencyHz;
@@ -90,7 +94,7 @@ export default function CanvasPlayer({pitchFrequency}: CanvasPlayerProps) {
 
     const waveToUse = pitchedWave || wave;
 
-    const wavBuffer = float32ToWav(waveToUse, volume, sampleRateGlobal, repeatCount);
+    const wavBuffer = float32ToWav(waveToUse, sampleRateGlobal, repeatCount);
     //convert array buffer to base64
     console.log("wavBuffer slice:", new Uint8Array(wavBuffer).slice(44, 54)); // Skip header
 
@@ -103,6 +107,7 @@ export default function CanvasPlayer({pitchFrequency}: CanvasPlayerProps) {
     setFileUri(fileUri);
     //play sound
     const { sound } = await Audio.Sound.createAsync({ uri: fileUri });
+    sound.setVolumeAsync(volume);
     sound.playAsync();
   };
 
@@ -115,9 +120,11 @@ export default function CanvasPlayer({pitchFrequency}: CanvasPlayerProps) {
       { uri: fileUri },
       { shouldPlay: true }
     );
+    console.log("Playing sound from file:", fileUri);
+    sound.setVolumeAsync(volume);
     sound.playAsync();
     console.log("Playing sound from:", fileUri);
-  }, [fileUri]);
+  }, [fileUri, volume]);
 
   useEffect(() => {
     if (isPlaying && wavePoints) {

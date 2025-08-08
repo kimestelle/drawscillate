@@ -10,13 +10,15 @@ import { scaleHeight, scaleWidth } from "./theme";
 
 export default function App() {
   const [pitchFrequency, setPitchFrequency] = useState(0);
+  const [volume, setVolume] = useState(1);
+
   return (
     <View style={styles.container }>
       <StatusBar style="auto" />
 
       <View style={{ transform: [{ translateY: scaleHeight(0) }] }}>
         <View style={{ transform: [{ translateY: scaleHeight(10) }] }}>
-            <CanvasPlayer pitchFrequency={pitchFrequency}/>
+            <CanvasPlayer pitchFrequency={pitchFrequency} volume={volume}/>
         </View>
         
         <View style={styles.controls} >
@@ -34,7 +36,7 @@ export default function App() {
                     transform: [{ translateY: scaleHeight(142) }, { translateX: scaleWidth(20) }] }}> 
                     {/* TODO: insert drawing here */}
                 </View>
-                <VolumeControl />
+                <VolumeControl setVolume={setVolume} />
             </View>
         </View>
       </View>
